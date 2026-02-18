@@ -7,7 +7,7 @@ import multer from "multer";
 import { createRequire } from "module";
 
 // -------------------- PDF Parse (works in ESM/tsx) --------------------
-// Use createRequire so we reliably load the CommonJS export (a function).
+// Use createRequire so we reliably load the CommonJS export.
 const require = createRequire(import.meta.url);
 let pdfParseFn: any = null;
 
@@ -38,7 +38,7 @@ type ChatThread = {
   summary?: string;
 };
 
-// -------------------- In-memory store --------------------
+// -------------------- In memory store --------------------
 
 const threads = new Map<string, ChatThread>();
 
@@ -49,8 +49,46 @@ function makeId() {
 function titleFromFirstUserMessage(messages: ChatMessage[]) {
   const firstUser = messages.find((m) => m.role === "user");
   if (!firstUser) return "New Chat";
-  const t = firstUser.content.trim().replace(/\s+/g, " ");
-  return t.length > 28 ? t.slice(0, 28) + "…" : t;
+
+  let text = firstUser.content
+    .replace(/--- Extracted from[\s\S]*$/i, "")
+    .replace(/^Sent files:.*$/im, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+
+  if (!text) return "New Chat";
+
+  // Remove common conversational starters
+  const fillers = [
+    "please",
+    "can you",
+    "could you",
+    "help me with",
+    "i need help with",
+    "explain",
+    "how do i",
+    "what is",
+    "tell me about",
+  ];
+
+  for (const phrase of fillers) {
+    if (text.startsWith(phrase)) {
+      text = text.replace(phrase, "").trim();
+    }
+  }
+
+  // Keep first 4–5 meaningful words
+  const words = text.split(" ").filter(Boolean);
+  const short = words.slice(0, 5).join(" ");
+
+  // Capitalize each word
+  const formatted = short
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+
+  return formatted.length > 32 ? formatted.slice(0, 32) + "…" : formatted;
 }
 
 function buildPrompt(thread: ChatThread, n = 12) {
@@ -141,6 +179,7 @@ app.post("/api/threads", (_req, res) => {
   res.status(201).json({ thread });
 });
 
+// DELETE THREAD (for the three dots menu)
 app.delete("/api/threads/:id", (req, res) => {
   const threadId = Array.isArray(req.params.id)
     ? req.params.id[0]
@@ -170,6 +209,8 @@ app.post(
 
     const content = (req.body.content || "").toString().trim();
     const uploadedFiles = req.files as Express.Multer.File[] | undefined;
+    const responseStyle = (req.body.responseStyle || "detailed").toString();
+    const includePractice = String(req.body.includePractice) === "true";
 
     let combinedContent = content || "";
 
@@ -234,7 +275,9 @@ app.post(
 
       thread.messages.push(assistantMsg);
       thread.updatedAt = Date.now();
-      thread.title = titleFromFirstUserMessage(thread.messages);
+      if (!thread.title || thread.title === "New Chat") {
+        thread.title = titleFromFirstUserMessage(thread.messages);
+      }
 
       threads.set(threadId, thread);
 

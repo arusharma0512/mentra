@@ -13,6 +13,13 @@ export type ChatThread = {
   summary?: string;
 };
 
+export type ResponseStyle = "concise" | "detailed" | "step-by-step";
+
+export type SendOptions = {
+  responseStyle?: ResponseStyle;
+  includePractice?: boolean;
+};
+
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 
 // -------------------- LIST THREADS --------------------
@@ -22,9 +29,7 @@ export async function listThreads(): Promise<ChatThread[]> {
     credentials: "include",
   });
 
-  if (!res.ok) {
-    throw new Error("Failed to list threads");
-  }
+  if (!res.ok) throw new Error("Failed to list threads");
 
   const data = await res.json();
   return data.threads ?? [];
@@ -38,31 +43,55 @@ export async function createThread(): Promise<ChatThread> {
     credentials: "include",
   });
 
-  if (!res.ok) {
-    throw new Error("Failed to create thread");
-  }
+  if (!res.ok) throw new Error("Failed to create thread");
 
   const data = await res.json();
   return data.thread;
 }
 
 // -------------------- SEND MESSAGE --------------------
+// ✅ Supports BOTH:
+// sendMessage(id, content, files, "detailed", true)
+// sendMessage(id, content, files, { responseStyle: "detailed", includePractice: true })
 
 export async function sendMessage(
   threadId: string,
   content: string,
   files?: File[],
+  responseStyleOrOptions?: ResponseStyle | SendOptions,
+  includePracticeMaybe?: boolean,
 ): Promise<{ message: ChatMessage; thread: ChatThread }> {
-  // 🔥 IMPORTANT DEBUG LOG
-  console.log("Sending files:", files);
+  // Normalize args
+  let responseStyle: ResponseStyle = "detailed";
+  let includePractice = false;
+
+  if (typeof responseStyleOrOptions === "string") {
+    responseStyle = responseStyleOrOptions;
+    includePractice = Boolean(includePracticeMaybe);
+  } else if (
+    typeof responseStyleOrOptions === "object" &&
+    responseStyleOrOptions
+  ) {
+    responseStyle = responseStyleOrOptions.responseStyle ?? "detailed";
+    includePractice = Boolean(responseStyleOrOptions.includePractice);
+  }
+
+  const safeFiles = files ?? [];
+
+  // 🔥 DEBUG LOG
+  console.log("Sending files:", safeFiles);
+  console.log("responseStyle:", responseStyle);
+  console.log("includePractice:", includePractice);
 
   // If files exist → use FormData
-  if (files && files.length > 0) {
+  if (safeFiles.length > 0) {
     const formData = new FormData();
 
     formData.append("content", content ?? "");
+    formData.append("responseStyle", responseStyle);
+    formData.append("includePractice", String(includePractice));
 
-    for (const file of files) {
+    for (const file of safeFiles) {
       formData.append("files", file);
     }
 
@@ -70,7 +99,6 @@ export async function sendMessage(
       method: "POST",
       body: formData,
       credentials: "include",
-      // 🚫 DO NOT set Content-Type manually
     });
 
     const data = await res.json();
@@ -88,7 +116,11 @@ export async function sendMessage(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({
+      content,
+      responseStyle,
+      includePractice,
+    }),
   });
 
   const data = await res.json();
