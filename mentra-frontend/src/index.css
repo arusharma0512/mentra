@@ -1,0 +1,165 @@
+@import "tailwindcss";
+
+body {
+  background-color: #fafcfb;
+  color: #1f2933;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+:root {
+  /* Mint / Sage palette (close to your mock) */
+  --bg: #f6f8f7;
+  --panel: rgba(255, 255, 255, 0.78);
+  --panel-strong: rgba(255, 255, 255, 0.92);
+  --stroke: rgba(15, 23, 42, 0.1);
+
+  --text: #0f172a;
+  --muted: rgba(15, 23, 42, 0.62);
+
+  --mint-50: #f1fbf6;
+  --mint-100: #e3f7ee;
+  --mint-200: #c8f0df;
+  --mint-300: #a4e6cd;
+
+  --sage-500: #5b8f78;
+  --sage-600: #457a63;
+
+  --shadow: 0 10px 30px rgba(2, 6, 23, 0.1);
+  --shadow-soft: 0 6px 18px rgba(2, 6, 23, 0.08);
+
+  --r-lg: 18px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  --blur: blur(10px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Inter,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    "Apple Color Emoji",
+    "Segoe UI Emoji";
+  color: var(--text);
+  background:
+    radial-gradient(
+      1200px 700px at 15% 5%,
+      rgba(164, 230, 205, 0.35),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 85% 15%,
+      rgba(200, 240, 223, 0.35),
+      transparent 55%
+    ),
+    var(--bg);
+}
+
+a {
+  color: inherit;
+}
+
+/* Reusable UI utilities */
+.glass {
+  background: var(--panel);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--stroke);
+  box-shadow: var(--shadow-soft);
+}
+
+.card {
+  background: var(--panel-strong);
+  border: 1px solid var(--stroke);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow);
+}
+
+.pill {
+  border-radius: var(--r-pill);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.75);
+  padding: 10px 14px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition:
+    transform 0.08s ease,
+    background 0.15s ease;
+}
+.btn:hover {
+  background: rgba(255, 255, 255, 0.92);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: linear-gradient(180deg, var(--mint-200), var(--mint-100));
+  border: 1px solid rgba(69, 122, 99, 0.25);
+}
+.btn-primary:hover {
+  filter: brightness(1.02);
+}
+
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-pill);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* Chat bubbles */
+.bubble {
+  max-width: 66ch;
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--shadow-soft);
+  line-height: 1.45;
+}
+.bubble.user {
+  background: linear-gradient(
+    180deg,
+    rgba(200, 240, 223, 0.85),
+    rgba(227, 247, 238, 0.85)
+  );
+  border-color: rgba(69, 122, 99, 0.2);
+}

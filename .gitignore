@@ -1,0 +1,13 @@
+# dependencies
+node_modules
+
+# env files (SECRETS)
+.env
+.env.*
+!.env.example
+
+# logs / build
+dist
+build
+.vite
+.DS_Store
